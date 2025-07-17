@@ -7,6 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, CheckCircle, Zap, Globe, Smartphone, Monitor, Users, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import emailjs from '@emailjs/browser';
+import heroVideo from '@/assets/videos/video.mp4';
+import logo from '@/assets/images/omniAdWhiteLogo.png';
 
 export function BackgroundVideo({ src }) {
   return (
@@ -36,7 +39,7 @@ const RotatingHeadline = () => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % headlines.length);
     }, 3000);
-    
+
     return () => clearInterval(interval);
   }, []);
   
@@ -122,26 +125,30 @@ const ContactForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
     setIsSubmitting(true);
-    
+
     try {
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-        await fetch(`${API_BASE_URL}/api/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+          message: formData.message,
+        }
+      );
+
       setIsSuccess(true);
       setFormData({ name: '', email: '', company: '', message: '' });
-    } catch (error) {
-      console.error('Form submission failed:', error);
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      alert('Sorry, we could not send your message. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   const handleChange = (field, value) => {
@@ -222,6 +229,10 @@ const ContactForm = () => {
 };
 
 export default function Home() {
+  useEffect(() => { 
+    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
+  }, []);
+
   const scrollToContact = () => {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -235,11 +246,11 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full bg-[#0B1120] z-50 shadow relative text-white">
      {/* full-page video backdrop */}
-     <BackgroundVideo src="src/assets/videos/video.mp4" />
+     <BackgroundVideo src={heroVideo} />
       <nav className="fixed top-0 left-0 w-full bg-[#0B1120] z-50 shadow">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-4">
           <div className="flex items-center">
-            <img src="src/assets/images/omniAdWhiteLogo.png" alt="Logo" className="h-10 mr-3" />
+            <img src={logo} alt="Logo" className="h-10 mr-3" />
             <span className="text-2xl font-bold text-white"></span>
           </div>
           <div className="space-x-8">
